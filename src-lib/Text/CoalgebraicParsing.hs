@@ -13,6 +13,7 @@ module Text.CoalgebraicParsing
   , delta
   , step
   , skip
+  , kill
   , cond
   ) where
 
@@ -69,8 +70,7 @@ instance Alternative f => Applicative (Parser p f) where
 
   p <*> q = Parser
     { results = results p <*> results q
-    -- TODO: second occurrence of skip is wrong
-    , step = step p <*> skip q <|> skip p <*> step q
+    , step = step p <*> skip q <|> skip (kill p) <*> step q
     }
 
 instance Alternative f => Alternative (Parser t f) where
@@ -83,6 +83,10 @@ instance Alternative f => Alternative (Parser t f) where
     { results = results p <|> results q
     , step = step p <|> step q
     }
+
+-- | Remove a parser's future behavior.
+kill :: Alternative f => Parser t f a -> Parser t f a
+kill p = p { step = empty }
 
 -- | Accept exactly the given token.
 token :: (Alternative f, Eq t) => t -> Parser t f t
