@@ -26,9 +26,7 @@ newtype Table t f a = Table
   }
 
 instance Functor f => Functor (Table t f) where
-  fmap f tbl = Table
-    { delta = fmap f . delta tbl
-    }
+  fmap f tbl = Table (\t -> fmap f (delta tbl t))
 
 instance Applicative f => Applicative (Table t f) where
   pure a = Table (\t -> pure a)
