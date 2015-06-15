@@ -12,12 +12,12 @@ main = defaultMain tests
 assertAccept :: String -> String -> Parser Char [] a -> Assertion
 assertAccept msg text p = do
   when (null (parse p text)) $ do
-    assertString ("parse " ++ msg ++ " " ++ show text)
+    assertString (msg ++ " rejects " ++ show text ++ ".\nShould accept.")
 
 assertReject :: String -> String -> Parser Char [] a -> Assertion
 assertReject msg text p = do
   unless (null (parse p text)) $ do
-    assertString ("parse " ++ msg ++ " " ++ show text)
+    assertString (msg ++ " accepts " ++ show text ++ ".\nShould reject.")
 
 tests =
   [ testCase "empty doesn't accept anything" $ do
