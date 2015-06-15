@@ -12,8 +12,6 @@ module Text.CoalgebraicParsing
   , neg
   , minus
     -- * Transition tables   
-  , Table
-  , delta
   , step
   , skip
   , kill
@@ -23,35 +21,19 @@ module Text.CoalgebraicParsing
 import Prelude hiding (foldl)
 
 import Control.Applicative
+import Control.Monad.Trans.Reader
+
 import Data.Foldable
-
--- | A transition table for a state machine with input tokens
--- 't', behavior 'f' and result 'a'.
-newtype Table t f a = Table
-  { -- | Look up the target of a transition in the table.
-    delta :: t -> f a
-  }
-
-instance Functor f => Functor (Table t f) where
-  fmap f tbl = Table (\t -> fmap f (delta tbl t))
-
-instance Applicative f => Applicative (Table t f) where
-  pure a = Table (\t -> pure a)
-  p <*> q = Table (\t -> delta p t <*> delta q t)
-
-instance Alternative f => Alternative (Table t f) where
-  empty = Table (\t -> empty)
-  p <|> q = Table (\t -> delta p t <|> delta q t)
 
 -- | A transition table that maps all inputs to the same
 -- behavior.
-skip :: f a -> Table t f a
-skip p = Table (\t -> p)
+skip :: f a -> ReaderT t f a
+skip p = ReaderT (\t -> p)
 
 -- | A transition table that behaves different depending on a
 -- predicate on tokens.
-cond :: (t -> Bool) -> f a -> f a -> Table t f a
-cond f p q = Table (\t -> if f t then p else q)
+cond :: (t -> Bool) -> f a -> f a -> ReaderT t f a
+cond f p q = ReaderT (\t -> if f t then p else q)
 
 -- | A parser that produces results of type 'a' in a data
 -- structure of type 'f' when fed tokens of type 't'.
@@ -59,7 +41,7 @@ data Parser t f a = Parser
   { -- | Return the results if we would stop parsing now.
     results :: f a
     -- | The transition table of this parser.
-  , step :: Table t (Parser t f) a
+  , step :: ReaderT t (Parser t f) a
   }
 
 instance Functor f => Functor (Parser t f) where
@@ -104,19 +86,15 @@ token t = Parser
 -- | Consume a token and return a new parser that reflects the
 -- consumed token in its internal state.
 consume :: Parser t f a -> t -> Parser t f a
-consume = delta . step
+consume = runReaderT . step
 
 -- | Parse a list of tokens.
 parse :: Parser t f a -> [t] -> f a
 parse p ts = results (foldl consume p ts)
 
-liftTable1 :: (f a -> f b) -> Table t f a -> Table t f b
-liftTable1 f tbl1 =
-  Table (\t -> f (delta tbl1 t))
-
-liftTable2 :: (f a -> f b -> f c) -> Table t f a -> Table t f b -> Table t f c
+liftTable2 :: (f a -> f b -> f c) -> ReaderT t f a -> ReaderT t f b -> ReaderT t f c
 liftTable2 f tbl1 tbl2 =
-  Table (\t -> f (delta tbl1 t) (delta tbl2 t))
+  ReaderT (\t -> f (runReaderT tbl1 t) (runReaderT tbl2 t))
 
 -- | Accept words that are accepted by both parsers.
 intersect :: Applicative f => Parser t f a -> Parser t f b -> Parser t f (a, b)
@@ -129,7 +107,7 @@ intersect p q = Parser
 neg :: (Alternative f, Foldable f) => Parser t f a -> Parser t f ()
 neg p = Parser
   { results = if null (toList (results p)) then pure () else empty
-  , step = liftTable1 neg (step p)
+  , step = mapReaderT neg (step p)
   }
 
 -- | Accept words accepted by the first but not the second parser.
