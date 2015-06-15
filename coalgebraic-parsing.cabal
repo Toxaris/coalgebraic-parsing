@@ -23,7 +23,7 @@ library
   exposed-modules:
     Text.CoalgebraicParsing
   build-depends:
-    base >=4.7 && <4.8
+    base >=4.6 && <4.8
 
 test-suite tests
   type: exitcode-stdio-1.0
@@ -31,7 +31,7 @@ test-suite tests
   main-is: tests.hs
   -- other-modules:
   Build-depends:
-    base >=4.7 && <4.8,
+    base >=4.6 && <4.8,
     coalgebraic-parsing,
     test-framework,
     test-framework-hunit,
