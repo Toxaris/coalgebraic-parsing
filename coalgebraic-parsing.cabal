@@ -23,8 +23,7 @@ library
   exposed-modules:
     Text.CoalgebraicParsing
   build-depends:
-    base >=4.7 && <4.8,
-    transformers
+    base >=4.7 && <4.8
 
 test-suite tests
   type: exitcode-stdio-1.0
