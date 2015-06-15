@@ -19,6 +19,8 @@ module Text.CoalgebraicParsing
 import Prelude hiding (foldl)
 
 import Control.Applicative
+import Control.Monad
+
 import Data.Foldable
 
 -- | A parser that produces results of type 'a' in a data
@@ -58,6 +60,17 @@ instance Alternative f => Alternative (Parser t f) where
     { results = results p <|> results q
     , consume = \t -> consume p t <|> consume q t
     }
+
+instance (Alternative f, Foldable f) => Monad (Parser t f) where
+  return = pure
+  p >>= f = Parser
+    { results = empty
+    , consume = \t -> consume p t >>= f
+    } <|> asum (fmap f (results p))
+
+instance (Alternative f, Foldable f) => MonadPlus (Parser t f) where
+  mzero = empty
+  mplus = (<|>)
 
 -- | Remove a parser's future behavior.
 kill :: Alternative f => Parser t f a -> Parser t f a

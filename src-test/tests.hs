@@ -1,5 +1,9 @@
+import Prelude hiding (concat)
+
 import Control.Applicative
-import Control.Monad
+import Control.Monad hiding (forM_)
+
+import Data.Foldable
 
 import Test.Framework
 import Test.Framework.Providers.HUnit
@@ -54,4 +58,30 @@ tests =
             if x == y && y == z
               then assertAccept "xyz" txt xyz
               else assertReject "xyz" txt xyz
+  , testCase "monadic ops" $ do
+      let nstars = do
+            num <- some (asum (fmap token "0123456789"))
+            replicateM_ (read num) (token '*')
+      assertAccept "nstars" "0" nstars
+      assertAccept "nstars" "1*" nstars
+      assertAccept "nstars" "2**" nstars
+      assertAccept "nstars" "3***" nstars
+      assertAccept "nstars" "9*********" nstars
+      assertAccept "nstars" "10**********" nstars
+      assertAccept "nstars" "11***********" nstars
+
+      assertReject "nstars" "0*" nstars
+      assertReject "nstars" "1**" nstars
+      assertReject "nstars" "2***" nstars
+      assertReject "nstars" "3****" nstars
+      assertReject "nstars" "9**********" nstars
+      assertReject "nstars" "10***********" nstars
+      assertReject "nstars" "11************" nstars
+
+      assertReject "nstars" "1" nstars
+      assertReject "nstars" "2*" nstars
+      assertReject "nstars" "3**" nstars
+      assertReject "nstars" "9********" nstars
+      assertReject "nstars" "10*********" nstars
+      assertReject "nstars" "11**********" nstars
   ]
