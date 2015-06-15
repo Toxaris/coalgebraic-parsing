@@ -40,4 +40,18 @@ tests =
       assertAccept "r" "x" r
       assertReject "r" "xx" r
       assertAccept "r" "xxx" r
+  , testCase "x^n y^n z^n" $ do
+      let x = token 'x'
+          y = token 'y'
+          z = token 'z'
+          repeat p q = pure 0 <|> p *> fmap succ (repeat p q) <* q
+          xyz = (repeat x y <* many z) `intersect` (many x *> repeat y z)
+
+      forM_ [0..4] $ \x -> do
+        forM_ [0..4] $ \y -> do
+          forM_ [0..4] $ \z -> do
+            let txt = concat (zipWith replicate [x, y, z] "xyz")
+            if x == y && y == z
+              then assertAccept "xyz" txt xyz
+              else assertReject "xyz" txt xyz
   ]
