@@ -3,3 +3,4 @@ before_install: cabal sandbox init --sandbox=$HOME/.cabal-sandbox
 cache:
   directories:
     -  $HOME/.cabal-sandbox
+before_cache: rm -f $HOME/.cabal-sandbox/add-source-timestamps
