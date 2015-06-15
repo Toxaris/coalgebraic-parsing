@@ -8,6 +8,9 @@ module Text.CoalgebraicParsing
   , consume
   , parse
   , token
+  , intersect
+  , neg
+  , minus
     -- * Transition tables   
   , Table
   , delta
@@ -17,7 +20,10 @@ module Text.CoalgebraicParsing
   , cond
   ) where
 
+import Prelude hiding (foldl)
+
 import Control.Applicative
+import Data.Foldable
 
 -- | A transition table for a state machine with input tokens
 -- 't', behavior 'f' and result 'a'.
@@ -103,3 +109,29 @@ consume = delta . step
 -- | Parse a list of tokens.
 parse :: Parser t f a -> [t] -> f a
 parse p ts = results (foldl consume p ts)
+
+liftTable1 :: (f a -> f b) -> Table t f a -> Table t f b
+liftTable1 f tbl1 =
+  Table (\t -> f (delta tbl1 t))
+
+liftTable2 :: (f a -> f b -> f c) -> Table t f a -> Table t f b -> Table t f c
+liftTable2 f tbl1 tbl2 =
+  Table (\t -> f (delta tbl1 t) (delta tbl2 t))
+
+-- | Accept words that are accepted by both parsers.
+intersect :: Applicative f => Parser t f a -> Parser t f b -> Parser t f (a, b)
+intersect p q = Parser
+  { results = (,) <$> results p <*> results q
+  , step = liftTable2 intersect (step p) (step q)
+  }
+
+-- | Accept words that are *not* accepted by the parser.
+neg :: (Alternative f, Foldable f) => Parser t f a -> Parser t f ()
+neg p = Parser
+  { results = if null (toList (results p)) then pure () else empty
+  , step = liftTable1 neg (step p)
+  }
+
+-- | Accept words accepted by the first but not the second parser.
+minus :: Parser t [] a -> Parser t []  b -> Parser t [] a
+minus p q = fmap fst (p `intersect` neg q)

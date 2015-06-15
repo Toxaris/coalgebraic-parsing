@@ -24,3 +24,15 @@ library
     Text.CoalgebraicParsing
   build-depends:
     base >=4.7 && <4.8
+
+test-suite tests
+  type: exitcode-stdio-1.0
+  hs-source-dirs: src-test
+  main-is: tests.hs
+  -- other-modules:
+  Build-depends:
+    base >=4.7 && <4.8,
+    coalgebraic-parsing,
+    test-framework,
+    test-framework-hunit,
+    HUnit
