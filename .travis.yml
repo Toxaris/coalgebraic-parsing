@@ -1,3 +1,5 @@
 language: haskell
-before_install: cabal sandbox init
-cache: .cabal-sandbox
+before_install: cabal sandbox init --sandbox=$HOME/.cabal-sandbox
+cache:
+  directories:
+    -  $HOME/.cabal-sandbox
