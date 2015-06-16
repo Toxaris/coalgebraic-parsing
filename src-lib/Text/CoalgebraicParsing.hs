@@ -9,11 +9,14 @@ module Text.CoalgebraicParsing
   , consume
   , parse
     -- ** Construct parsers
+  , anyToken
   , kill
   , token
   , intersect
   , neg
   , minus
+  , satisfy
+  , skipMany
   ) where
 
 import Prelude hiding (foldl)
@@ -72,16 +75,24 @@ instance (Alternative f, Foldable f) => MonadPlus (Parser t f) where
   mzero = empty
   mplus = (<|>)
 
+-- | Matching any token and returning it.
+anyToken :: Alternative f => Parser t f t
+anyToken = Parser
+  { results = empty
+  , consume = pure
+  }
+
+-- | Semantic Predicate
+satisfy :: (Alternative f, Foldable f) => Parser t f a -> (a -> Bool) -> Parser t f a
+satisfy p f = mfilter f p
+
 -- | Remove a parser's future behavior.
 kill :: Alternative f => Parser t f a -> Parser t f a
 kill p = p { consume = \t -> empty }
 
 -- | Accept exactly the given token.
-token :: (Alternative f, Eq t) => t -> Parser t f t
-token t = Parser
-  { results = empty
-  , consume = \t' -> if t == t' then pure t else empty
-  }
+token :: (Alternative f, Foldable f, Eq t) => t -> Parser t f t
+token t = anyToken `satisfy` (== t)
 
 -- | Parse a list of tokens.
 parse :: Parser t f a -> [t] -> f a
@@ -104,3 +115,7 @@ neg p = Parser
 -- | Accept words accepted by the first but not the second parser.
 minus :: Parser t [] a -> Parser t []  b -> Parser t [] a
 minus p q = fmap fst (p `intersect` neg q)
+
+-- | applying p zero or more times, skipping the results
+skipMany :: (Alternative f, Foldable f) => Parser t f a -> Parser t f ()
+skipMany p = fmap (const ()) (many p)

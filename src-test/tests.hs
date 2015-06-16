@@ -1,4 +1,4 @@
-import Prelude hiding (concat)
+import Prelude hiding (concat, foldl)
 
 import Control.Applicative
 import Control.Monad hiding (forM_)
