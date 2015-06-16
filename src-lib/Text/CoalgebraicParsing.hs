@@ -16,6 +16,7 @@ module Text.CoalgebraicParsing
   , neg
   , minus
   , satisfy
+  , skipMany
   ) where
 
 import Prelude hiding (foldl)
@@ -114,3 +115,7 @@ neg p = Parser
 -- | Accept words accepted by the first but not the second parser.
 minus :: Parser t [] a -> Parser t []  b -> Parser t [] a
 minus p q = fmap fst (p `intersect` neg q)
+
+-- | applying p zero or more times, skipping the results
+skipMany :: (Alternative f, Foldable f) => Parser t f a -> Parser t f ()
+skipMany p = fmap (const ()) (many p)
