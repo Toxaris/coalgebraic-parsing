@@ -16,12 +16,12 @@ module Text.CoalgebraicParsing
   , minus
   ) where
 
-import Prelude hiding (foldl)
+import Prelude hiding (foldl, pred, any)
 
 import Control.Applicative
 import Control.Monad
 
-import Data.Foldable
+import Data.Foldable hiding (any)
 
 -- | A parser that produces results of type 'a' in a data
 -- structure of type 'f' when fed tokens of type 't'.
@@ -72,16 +72,20 @@ instance (Alternative f, Foldable f) => MonadPlus (Parser t f) where
   mzero = empty
   mplus = (<|>)
 
+-- | Matching any token and returning it.
+any :: Alternative f => Parser t f t
+any = Parser
+  { results = empty
+  , consume = pure
+  }
+
 -- | Remove a parser's future behavior.
 kill :: Alternative f => Parser t f a -> Parser t f a
 kill p = p { consume = \t -> empty }
 
 -- | Accept exactly the given token.
-token :: (Alternative f, Eq t) => t -> Parser t f t
-token t = Parser
-  { results = empty
-  , consume = \t' -> if t == t' then pure t else empty
-  }
+token :: (Alternative f, Foldable f, Eq t) => t -> Parser t f t
+token t = pred (== t) any
 
 -- | Parse a list of tokens.
 parse :: Parser t f a -> [t] -> f a
@@ -104,3 +108,7 @@ neg p = Parser
 -- | Accept words accepted by the first but not the second parser.
 minus :: Parser t [] a -> Parser t []  b -> Parser t [] a
 minus p q = fmap fst (p `intersect` neg q)
+
+-- | Semantic Predicate
+pred :: (Alternative f, Foldable f) => (a -> Bool) -> Parser t f a -> Parser t f a
+pred = mfilter
