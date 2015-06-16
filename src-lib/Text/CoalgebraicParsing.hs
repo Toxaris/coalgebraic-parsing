@@ -50,7 +50,7 @@ instance Alternative f => Applicative (Parser p f) where
   pure a = Parser
     { results = pure a
     , consume = \t -> empty
-    , isAlive = True
+    , isAlive = False
     }
 
   p <*> q = Parser

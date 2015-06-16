@@ -95,7 +95,7 @@ tests =
         assertBool "" $ dead empty
         assertBool "" $ dead (empty <|> empty)
         assertBool "" $ dead (some empty)
-        assertBool "" $ alive (many empty)
+        assertBool "" $ dead (many empty)
         assertBool "" $ dead (consume (many empty) 'x')
         assertBool "" $ alive (some any)
         assertBool "" $ alive (consume (some any) 'x')
