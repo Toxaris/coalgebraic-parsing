@@ -1,9 +1,9 @@
-import Prelude hiding (concat, any, foldl)
+import Prelude hiding (concat, foldl)
 
 import Control.Applicative
 import Control.Monad hiding (forM_)
 
-import Data.Foldable hiding (any)
+import Data.Foldable
 
 import Test.Framework
 import Test.Framework.Providers.HUnit
@@ -97,7 +97,7 @@ tests =
         assertBool "" $ dead (some empty)
         assertBool "" $ dead (many empty)
         assertBool "" $ dead (consume (many empty) 'x')
-        assertBool "" $ alive (some any)
-        assertBool "" $ alive (consume (some any) 'x')
-        assertBool "" $ alive (feed (some any) "hello world")
+        assertBool "" $ alive (some anyToken)
+        assertBool "" $ alive (consume (some anyToken) 'x')
+        assertBool "" $ alive (feed (some anyToken) "hello world")
   ]
