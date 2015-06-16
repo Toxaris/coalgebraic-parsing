@@ -79,6 +79,10 @@ any = Parser
   , consume = pure
   }
 
+-- | Semantic Predicate
+pred :: (Alternative f, Foldable f) => (a -> Bool) -> Parser t f a -> Parser t f a
+pred = mfilter
+
 -- | Remove a parser's future behavior.
 kill :: Alternative f => Parser t f a -> Parser t f a
 kill p = p { consume = \t -> empty }
@@ -108,7 +112,3 @@ neg p = Parser
 -- | Accept words accepted by the first but not the second parser.
 minus :: Parser t [] a -> Parser t []  b -> Parser t [] a
 minus p q = fmap fst (p `intersect` neg q)
-
--- | Semantic Predicate
-pred :: (Alternative f, Foldable f) => (a -> Bool) -> Parser t f a -> Parser t f a
-pred = mfilter
