@@ -8,7 +8,9 @@ module Text.CoalgebraicParsing
   , results
   , consume
   , parse
+  , isAlive
     -- ** Construct parsers
+  , any
   , kill
   , token
   , intersect
@@ -71,11 +73,18 @@ instance Alternative f => Alternative (Parser t f) where
         (False, True) -> consume q t
         (True, False) -> consume p t
         _             -> empty
-
-    -- XXX `isAlive p` diverges due to the implementation of `many`
-    --   in http://hackage.haskell.org/package/base-4.8.0.0/docs/src/GHC-Base.html#many
-    , isAlive = True -- isAlive p || isAlive q
+    , isAlive = isAlive p || isAlive q
     }
+
+  -- we inline the implementation of 'some' and 'many' here
+  -- since otherwise computing 'isAlive' diverges.
+  some p = Parser
+    { results = empty
+    , consume = \t -> fmap (:) (consume p t) <*> many p
+    , isAlive = isAlive p
+    }
+
+  many p = some p <|> pure []
 
 instance (Alternative f, Foldable f) => Monad (Parser t f) where
   return = pure

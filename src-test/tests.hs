@@ -1,9 +1,9 @@
-import Prelude hiding (concat)
+import Prelude hiding (concat, any, foldl)
 
 import Control.Applicative
 import Control.Monad hiding (forM_)
 
-import Data.Foldable
+import Data.Foldable hiding (any)
 
 import Test.Framework
 import Test.Framework.Providers.HUnit
@@ -22,6 +22,9 @@ assertReject :: String -> String -> Parser Char [] a -> Assertion
 assertReject msg text p = do
   unless (null (parse p text)) $ do
     assertString (msg ++ " accepts " ++ show text ++ ".\nShould reject.")
+
+coerce :: Parser Char [] a -> Parser Char [] a
+coerce p = p
 
 tests =
   [ testCase "empty doesn't accept anything" $ do
@@ -84,4 +87,17 @@ tests =
       assertReject "nstars" "9********" nstars
       assertReject "nstars" "10*********" nstars
       assertReject "nstars" "11**********" nstars
+
+  , testCase "isAlive" $
+      let alive p  = isAlive (coerce p)
+          dead p   = not (alive p)
+          feed p s = (foldl consume p s) in do
+        assertBool "" $ dead empty
+        assertBool "" $ dead (empty <|> empty)
+        assertBool "" $ dead (some empty)
+        assertBool "" $ alive (many empty)
+        assertBool "" $ dead (consume (many empty) 'x')
+        assertBool "" $ alive (some any)
+        assertBool "" $ alive (consume (some any) 'x')
+        assertBool "" $ alive (feed (some any) "hello world")
   ]
