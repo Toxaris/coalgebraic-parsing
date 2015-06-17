@@ -65,4 +65,4 @@ toStringParser = fmap (:[])
 -- XXX maybe we want to have a built-in 'tokens' parser later
 --   for performance reasons.
 string :: (Foldable f, Alternative f) => String -> Parser Char f String
-string = foldl (<>) empty . fmap (toStringParser . token)
+string = foldl (<>) (pure []) . fmap (toStringParser . token)

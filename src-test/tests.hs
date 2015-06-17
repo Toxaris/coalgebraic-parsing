@@ -10,6 +10,7 @@ import Test.Framework.Providers.HUnit
 import Test.HUnit
 
 import Text.CoalgebraicParsing
+import Text.CoalgebraicParsing.Char
 
 main = defaultMain tests
 
@@ -84,4 +85,15 @@ tests =
       assertReject "nstars" "9********" nstars
       assertReject "nstars" "10*********" nstars
       assertReject "nstars" "11**********" nstars
+  , testCase "string" $ do
+      let foo = string "foo"
+      assertReject "string \"foo\"" "" foo
+      assertReject "string \"foo\"" "f" foo
+      assertReject "string \"foo\"" "fo" foo
+      assertAccept "string \"foo\"" "foo" foo
+      assertReject "string \"foo\"" "fooo" foo
+
+      let epsilon = string ""
+      assertAccept "string \"\"" "" epsilon
+      assertReject "string \"\"" "foo" epsilon
   ]
