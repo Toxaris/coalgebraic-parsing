@@ -96,4 +96,8 @@ tests =
       let epsilon = string ""
       assertAccept "string \"\"" "" epsilon
       assertReject "string \"\"" "foo" epsilon
+  , testCase "foobarb" $ do
+      let foobarb = (string "foobar" <|> string "foo") *> token 'b'
+      assertAccept "foobarb" "foobarb" foobarb
+      assertAccept "foobarb" "foob" foobarb
   ]
