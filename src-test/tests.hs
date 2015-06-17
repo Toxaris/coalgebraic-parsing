@@ -4,6 +4,7 @@ import Control.Applicative
 import Control.Monad hiding (forM_)
 
 import Data.Foldable
+import Data.Monoid
 
 import Test.Framework
 import Test.Framework.Providers.HUnit

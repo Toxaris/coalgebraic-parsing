@@ -5,6 +5,7 @@ module Text.CoalgebraicParsing.Char where
 import Prelude hiding (foldl)
 import Data.Char
 import Data.Foldable hiding (elem)
+import Data.Monoid
 import Control.Applicative
 import Text.CoalgebraicParsing
 
@@ -56,8 +57,9 @@ hexDigit = satisfy anyToken isHexDigit
 octDigit :: (Foldable f, Alternative f) => Parser Char f Char
 octDigit = satisfy anyToken isOctDigit
 
-(<>) :: (Foldable f, Alternative f) => Parser Char f String -> Parser Char f String -> Parser Char f String
-p <> q = fmap (++) p <*> q
+instance (Alternative f, Monoid a) => Monoid (Parser t f a) where
+  mempty = pure mempty
+  mappend p q = mappend <$> p <*> q
 
 toStringParser :: Functor f => Parser Char f Char -> Parser Char f String
 toStringParser = fmap (:[])
