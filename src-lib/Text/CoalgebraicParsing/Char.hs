@@ -4,6 +4,7 @@ module Text.CoalgebraicParsing.Char where
 
 import Prelude hiding (foldl)
 import Data.Char
+import Data.Traversable
 import Data.Foldable hiding (elem)
 import Data.Monoid
 import Control.Applicative
@@ -61,10 +62,7 @@ instance (Alternative f, Monoid a) => Monoid (Parser t f a) where
   mempty = pure mempty
   mappend p q = mappend <$> p <*> q
 
-toStringParser :: Functor f => Parser Char f Char -> Parser Char f String
-toStringParser = fmap (:[])
-
 -- XXX maybe we want to have a built-in 'tokens' parser later
 --   for performance reasons.
-string :: (Foldable f, Alternative f) => String -> Parser Char f String
-string = foldl (<>) (pure []) . fmap (toStringParser . token)
+string :: (Eq t, Foldable f, Alternative f, Traversable c) => c t -> Parser t f (c t)
+string = traverse token
