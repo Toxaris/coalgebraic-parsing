@@ -96,6 +96,12 @@ tests =
       let epsilon = string ""
       assertAccept "string \"\"" "" epsilon
       assertReject "string \"\"" "foo" epsilon
+  , testCase "<> operator" $ do
+      let foo = string "foo"
+          bar = string "bar"
+      assertAccept "foo <> bar" "foobar" (foo <> bar)
+      assertReject "foo <> bar" "foo" (foo <> bar)
+      assertReject "foo <> bar" "bar" (foo <> bar)
   , testCase "foobarb" $ do
       let foobarb = (string "foobar" <|> string "foo") *> token 'b'
       assertAccept "foobarb" "foobarb" foobarb
