@@ -107,4 +107,15 @@ tests =
       let foobarb = (string "foobar" <|> string "foo") *> token 'b'
       assertAccept "foobarb" "foobarb" foobarb
       assertAccept "foobarb" "foob" foobarb
+  , testCase "interleaving via delegate" $ do
+       let interleave p q = asum
+             [ (,) <$> kill p <*> kill q
+             , do p <- delegate p
+                  q <- delegate q
+                  interleave p q
+             ]
+       assertAccept "interleave (string \"foo\") (many (char '_'))"
+         "f_o_o_" (interleave (string "foo") (many (char '_')))
+       assertReject "interleave (string \"foo\") (many (char '_'))"
+         "foo" (interleave (string "foo") (many (char '_')))
   ]

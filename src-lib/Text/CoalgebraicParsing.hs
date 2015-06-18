@@ -17,6 +17,8 @@ module Text.CoalgebraicParsing
   , minus
   , satisfy
   , skipMany
+    -- ** Delegate parsing
+  , delegate
   ) where
 
 import Prelude hiding (foldl)
@@ -119,3 +121,13 @@ minus p q = fmap fst (p `intersect` neg q)
 -- | applying p zero or more times, skipping the results
 skipMany :: (Alternative f, Foldable f) => Parser t f a -> Parser t f ()
 skipMany p = fmap (const ()) (many p)
+
+-- Delegate processing of one token to another parser
+delegate :: Alternative f => Parser t f a -> Parser t f (Parser t f a)
+delegate p = Parser
+  { results = empty
+  , consume = \t -> Parser
+    { results = pure (consume p t)
+    , consume = \t -> empty
+    }
+  }
