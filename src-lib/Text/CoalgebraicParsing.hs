@@ -17,6 +17,7 @@ module Text.CoalgebraicParsing
   , minus
   , satisfy
   , skipMany
+  , consumed
     -- ** Delegate parsing
   , delegate
   , delegateOnce
@@ -142,6 +143,10 @@ delegate p = Parser
   { results = pure p
   , consume = \t -> delegate (consume p t)
   }
+
+-- | Records the tokens consumed by p and returns them as result
+consumed :: Alternative f => Parser t f a -> Parser t f [t]
+consumed p = fmap fst $ (many anyToken) `intersect` p
 
 -- | Delegate to the first parser, while the second parser matches
 delegateWhile :: Alternative f => Parser t f a -> Parser t f b -> Parser t f (Parser t f a)
