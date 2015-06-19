@@ -23,6 +23,7 @@ library
   exposed-modules:
     Text.CoalgebraicParsing
     Text.CoalgebraicParsing.Char
+    Text.CoalgebraicParsing.Cobind
   build-depends:
     base >=4.6 && <4.8
 

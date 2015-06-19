@@ -30,6 +30,7 @@ import Control.Applicative
 import Control.Monad
 
 import Data.Foldable
+import Text.CoalgebraicParsing.Cobind
 
 -- | A parser that produces results of type 'a' in a data
 -- structure of type 'f' when fed tokens of type 't'.
@@ -79,6 +80,10 @@ instance (Alternative f, Foldable f) => Monad (Parser t f) where
 instance (Alternative f, Foldable f) => MonadPlus (Parser t f) where
   mzero = empty
   mplus = (<|>)
+
+instance Applicative f => Cobind (Parser t f) where
+  duplicate = delegate
+
 
 -- | Matching any token and returning it.
 anyToken :: Alternative f => Parser t f t
