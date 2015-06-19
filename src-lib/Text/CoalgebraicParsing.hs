@@ -139,3 +139,7 @@ delegateWhile p q = fmap fst $ intersect (delegate p) q
 -- | Delegate processing of one token to another parser
 delegateOnce :: Alternative f => Parser t f a -> Parser t f (Parser t f a)
 delegateOnce p = delegateWhile p anyToken
+
+-- | Delegate processing of 'n' tokens to another parser
+delegateN :: (Alternative f, Foldable f) => Parser t f a -> Int -> Parser t f (Parser t f a)
+delegateN p n = delegateWhile p (replicateM n anyToken)
