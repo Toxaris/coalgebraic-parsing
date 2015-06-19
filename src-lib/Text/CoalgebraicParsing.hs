@@ -106,6 +106,12 @@ token t = anyToken `satisfy` (== t)
 -- | Parse a list of tokens.
 parse :: Parser t f a -> [t] -> f a
 parse p ts = results (foldl consume p ts)
+parse :: Foldable r => Parser t f a -> r t -> f a
+parse p ts = results $ feed p ts
+
+-- | Feed a list of tokens to the parser
+feed :: Foldable r => Parser t f a -> r t -> Parser t f a
+feed p ts = foldl consume p ts
 
 -- | Accept words that are accepted by both parsers.
 intersect :: Applicative f => Parser t f a -> Parser t f b -> Parser t f (a, b)
