@@ -5,6 +5,7 @@ import Control.Monad hiding (forM_)
 
 import Data.Foldable
 import Data.Monoid
+import Data.Char
 
 import Test.Framework
 import Test.Framework.Providers.HUnit
@@ -24,6 +25,34 @@ assertReject :: String -> String -> Parser Char [] a -> Assertion
 assertReject msg text p = do
   unless (null (parse p text)) $ do
     assertString (msg ++ " accepts " ++ show text ++ ".\nShould reject.")
+
+-- simple layout sensitive parsing
+--
+-- Example program:
+--
+-- 0000
+-- 00
+-- def foo
+--   11
+--   11
+-- 0
+-- def bar
+--   def baz
+--     22
+--   1
+levelId :: Int -> Parser Char [] String
+levelId n = consumed $ many (token (intToDigit n))
+
+levelLine :: Int -> Parser Char [] String
+levelLine n = consumed $ some $
+  (levelId n) <* newline <|>
+  (string "def") <* space <* (many alphaNum) <* newline <*
+    (level (succ n) (levelLine (succ n)))
+
+level :: Int -> Parser Char [] String -> Parser Char [] String
+level n p = consumed $ do
+  next <- delegateWhile p (neg newline)
+  (replicateM_ (2 * n) space) <* level n next
 
 tests =
   [ testCase "empty doesn't accept anything" $ do
@@ -118,4 +147,12 @@ tests =
          "f_o_o_" (interleave (string "foo") (many (char '_')))
        assertReject "interleave (string \"foo\") (many (char '_'))"
          "foo" (interleave (string "foo") (many (char '_')))
+  , testCase "layout" $ do
+      assertAccept "" "0000\n" (levelLine 0)
+      assertAccept "" "0000\n\
+                      \0000\n" (levelLine 0)
+      assertReject "" "0000\n\
+                      \ 0000\n" (levelLine 0)
+      assertAccept "" "def foo\n\
+                      \  11\n" (levelLine 0)
   ]
