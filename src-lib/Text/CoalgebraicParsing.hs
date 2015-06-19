@@ -154,3 +154,8 @@ delegateOnce p = delegateWhile p anyToken
 -- | Delegate processing of 'n' tokens to another parser
 delegateN :: (Alternative f, Foldable f) => Parser t f a -> Int -> Parser t f (Parser t f a)
 delegateN p n = delegateWhile p (replicateM n anyToken)
+
+-- | Feeds the results produced by the first parser as input
+-- to the second. Often t == t'
+feedTo :: Applicative f => Foldable r => Parser t f (r t') -> Parser t' f a -> Parser t f (Parser t' f a)
+feedTo p q = fmap (feed q) p
