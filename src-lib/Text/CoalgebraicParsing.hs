@@ -19,6 +19,7 @@ module Text.CoalgebraicParsing
   , skipMany
     -- ** Delegate parsing
   , delegate
+  , delegateOnce
   ) where
 
 import Prelude hiding (foldl)
@@ -27,6 +28,7 @@ import Control.Applicative
 import Control.Monad
 
 import Data.Foldable
+import Text.CoalgebraicParsing.Cobind
 
 -- | A parser that produces results of type 'a' in a data
 -- structure of type 'f' when fed tokens of type 't'.
@@ -77,6 +79,10 @@ instance (Alternative f, Foldable f) => MonadPlus (Parser t f) where
   mzero = empty
   mplus = (<|>)
 
+instance Applicative f => Cobind (Parser t f) where
+  duplicate = delegate
+
+
 -- | Matching any token and returning it.
 anyToken :: Alternative f => Parser t f t
 anyToken = Parser
@@ -123,11 +129,11 @@ skipMany :: (Alternative f, Foldable f) => Parser t f a -> Parser t f ()
 skipMany p = fmap (const ()) (many p)
 
 -- Delegate processing of one token to another parser
-delegate :: Alternative f => Parser t f a -> Parser t f (Parser t f a)
+delegate :: Applicative f => Parser t f a -> Parser t f (Parser t f a)
 delegate p = Parser
-  { results = empty
-  , consume = \t -> Parser
-    { results = pure (consume p t)
-    , consume = \t -> empty
-    }
+  { results = pure p
+  , consume = \t -> delegate (consume p t)
   }
+
+delegateOnce :: Alternative f => Parser t f a -> Parser t f (Parser t f a)
+delegateOnce p = fmap fst $ intersect (delegate p) anyToken
