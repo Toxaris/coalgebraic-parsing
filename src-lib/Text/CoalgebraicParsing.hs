@@ -20,6 +20,7 @@ module Text.CoalgebraicParsing
     -- ** Delegate parsing
   , delegate
   , delegateOnce
+  , delegateWhile
   ) where
 
 import Prelude hiding (foldl)
@@ -136,6 +137,11 @@ delegate p = Parser
   , consume = \t -> delegate (consume p t)
   }
 
+-- | Delegate to the first parser, while the second parser matches
+delegateWhile :: Alternative f => Parser t f a -> Parser t f b -> Parser t f (Parser t f a)
+delegateWhile p q = fmap fst $ intersect (delegate p) q
+
 -- | Delegate processing of one token to another parser
 delegateOnce :: Alternative f => Parser t f a -> Parser t f (Parser t f a)
 delegateOnce p = fmap fst $ intersect (delegate p) anyToken
+delegateOnce p = delegateWhile p anyToken
