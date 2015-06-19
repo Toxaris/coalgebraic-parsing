@@ -105,8 +105,6 @@ token :: (Alternative f, Foldable f, Eq t) => t -> Parser t f t
 token t = anyToken `satisfy` (== t)
 
 -- | Parse a list of tokens.
-parse :: Parser t f a -> [t] -> f a
-parse p ts = results (foldl consume p ts)
 parse :: Foldable r => Parser t f a -> r t -> f a
 parse p ts = results $ feed p ts
 
