@@ -47,12 +47,13 @@ levelLine :: Int -> Parser Char [] String
 levelLine n = consumed $ some $
   (levelId n) <* newline <|>
   (string "def") <* space <* (many alphaNum) <* newline <*
-    (level (succ n) (levelLine (succ n)))
+    (level (levelLine (succ n)))
 
-level :: Int -> Parser Char [] String -> Parser Char [] String
-level n p = consumed $ do
-  next <- delegateWhile p (neg newline)
-  (replicateM_ (2 * n) space) <* level n next
+level :: Parser Char [] String -> Parser Char [] String
+level p = consumed $ do
+  space <* space
+  rest <- delegateWhile p (neg newline)
+  level rest
 
 tests =
   [ testCase "empty doesn't accept anything" $ do
@@ -147,12 +148,28 @@ tests =
          "f_o_o_" (interleave (string "foo") (many (char '_')))
        assertReject "interleave (string \"foo\") (many (char '_'))"
          "foo" (interleave (string "foo") (many (char '_')))
+  , testCase "consumed" $ do
+      let p = fmap read (consumed (many digit))
+      assertResult "consumed (many digit)" "12345" 12345 p
+      assertReject "consumed (many digit)" "12a345" p
   , testCase "layout" $ do
       assertAccept "" "0000\n" (levelLine 0)
+      assertAccept "" "111\n" (levelLine 1)
       assertAccept "" "0000\n\
                       \0000\n" (levelLine 0)
       assertReject "" "0000\n\
                       \ 0000\n" (levelLine 0)
       assertAccept "" "def foo\n\
                       \  11\n" (levelLine 0)
+      assertAccept "" "def foo\n\
+                      \  11\n\
+                      \00" (levelLine 0)
+      assertAccept "" "def foo\n\
+                      \  11\n\
+                      \  11\n\
+                      \00" (levelLine 0)
+      assertAccept "" "def foo\n\
+                      \  11\n\
+                      \  def bar\n\
+                      \    222\n" (levelLine 0)
   ]
