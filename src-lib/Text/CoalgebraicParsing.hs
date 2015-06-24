@@ -131,11 +131,34 @@ skipMany p = fmap (const ()) (many p)
 
 -- | Delegate processing to another parser and always return the
 -- current state of this parser as result.
+--
+--  1. delegate . delegate == fmap delegate . delegate
 delegate :: Applicative f => Parser t f a -> Parser t f (Parser t f a)
 delegate p = Parser
   { results = pure p
   , consume = \t -> delegate (consume p t)
   }
+
+-- Proof of delegate law 1:
+--
+-- delegate (delegate p)
+-- = Parser { results = pure (delegate p)
+--          , consume = \t -> delegate (consume (delegate p) t)
+--          }
+-- = Parser { results = fmap delegate (pure p)
+--          , consume = \t -> delegate (delegate (consume p t))
+--          }
+
+-- is there an induction principle that can help us here?
+
+-- = Parser { results = fmap delegate (pure p)
+--          , consume = \t -> fmap delegate (delegate (consume p t))
+--          }
+-- = fmap delegate
+--   Parser { results = pure p
+--          , consume = \t -> delegate (consume p t)
+--          }
+-- = fmap delegate (delegate p)
 
 -- | Records the tokens consumed by p and returns them as result
 consumed :: Alternative f => Parser t f a -> Parser t f [t]
