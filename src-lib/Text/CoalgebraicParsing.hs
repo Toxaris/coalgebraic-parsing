@@ -47,7 +47,7 @@ instance Functor f => Functor (Parser t f) where
     , consume = \t -> fmap f (consume p t)
     }
 
-instance Alternative f => Applicative (Parser p f) where
+instance (Foldable f, Alternative f) => Applicative (Parser p f) where
   pure a = Parser
     { results = pure a
     , consume = \t -> empty
@@ -55,10 +55,10 @@ instance Alternative f => Applicative (Parser p f) where
 
   p <*> q = Parser
     { results = results p <*> results q
-    , consume = \t -> consume p t <*> q <|> kill p <*> consume q t
+    , consume = \t -> consume p t <*> q <|> (let qq = consume q t in asum $ fmap (\f -> fmap f qq) (results p))
     }
 
-instance Alternative f => Alternative (Parser t f) where
+instance (Foldable f, Alternative f) => Alternative (Parser t f) where
   empty = Parser
     { results = empty
     , consume = \t -> empty
@@ -81,7 +81,7 @@ instance (Alternative f, Foldable f) => MonadPlus (Parser t f) where
   mplus = (<|>)
 
 -- | Matching any token and returning it.
-anyToken :: Alternative f => Parser t f t
+anyToken :: (Alternative f, Foldable f) => Parser t f t
 anyToken = Parser
   { results = empty
   , consume = pure
@@ -92,7 +92,7 @@ satisfy :: (Alternative f, Foldable f) => Parser t f a -> (a -> Bool) -> Parser 
 satisfy p f = mfilter f p
 
 -- | Remove a parser's future behavior.
-kill :: Alternative f => Parser t f a -> Parser t f a
+kill :: (Alternative f, Foldable f) => Parser t f a -> Parser t f a
 kill p = p { consume = \t -> empty }
 
 -- | Accept exactly the given token.
@@ -138,7 +138,7 @@ delegate p = Parser
   }
 
 -- | Records the tokens consumed by p and returns them as result
-consumed :: Alternative f => Parser t f a -> Parser t f [t]
+consumed :: (Alternative f, Foldable f) => Parser t f a -> Parser t f [t]
 consumed p = fmap fst $ (many anyToken) `intersect` p
 
 -- | Delegate to the first parser, while the second parser matches
@@ -146,7 +146,7 @@ delegateWhile :: Alternative f => Parser t f a -> Parser t f b -> Parser t f (Pa
 delegateWhile p q = fmap fst $ intersect (delegate p) q
 
 -- | Delegate processing of one token to another parser
-delegateOnce :: Alternative f => Parser t f a -> Parser t f (Parser t f a)
+delegateOnce :: (Alternative f, Foldable f) => Parser t f a -> Parser t f (Parser t f a)
 delegateOnce p = delegateWhile p anyToken
 
 -- | Delegate processing of 'n' tokens to another parser

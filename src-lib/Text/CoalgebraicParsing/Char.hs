@@ -58,7 +58,7 @@ hexDigit = satisfy anyToken isHexDigit
 octDigit :: (Foldable f, Alternative f) => Parser Char f Char
 octDigit = satisfy anyToken isOctDigit
 
-instance (Alternative f, Monoid a) => Monoid (Parser t f a) where
+instance (Alternative f, Foldable f, Monoid a) => Monoid (Parser t f a) where
   mempty = pure mempty
   mappend p q = mappend <$> p <*> q
 
