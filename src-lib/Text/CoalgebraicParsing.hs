@@ -55,7 +55,7 @@ instance Alternative f => Applicative (Parser p f) where
 
   p <*> q = Parser
     { results = results p <*> results q
-    , consume = \t -> consume p t <*> const q t <|> const (kill p) t <*> consume q t
+    , consume = \t -> consume p t <*> q <|> kill p <*> consume q t
     }
 
 instance Alternative f => Alternative (Parser t f) where
