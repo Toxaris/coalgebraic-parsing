@@ -19,7 +19,7 @@ main = defaultMain
             p = parse (many anyToken) in
         [ bench (show n) $
             nf p (replicate n 'a')
-        | n <- [2, 4 .. 10]
+        | n <- [2, 4 .. 10] ++ [20, 30 .. 100]
         ]
     ]
   ]

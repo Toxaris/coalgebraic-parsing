@@ -16,6 +16,7 @@ module Text.CoalgebraicParsing
   , neg
   , minus
   , satisfy
+  , fmaps
   , skipMany
   , consumed
     -- ** Delegate parsing
@@ -47,6 +48,13 @@ instance Functor f => Functor (Parser t f) where
     , consume = \t -> fmap f (consume p t)
     }
 
+-- | Maps a collection of functions over a parser's results.
+fmaps :: Applicative f => f (a -> b) -> Parser t f a -> Parser t f b
+fmaps fs p = Parser
+  { results = fs <*> results p
+  , consume = \t -> fmaps fs (consume p t)
+  }
+
 instance Alternative f => Applicative (Parser p f) where
   pure a = Parser
     { results = pure a
@@ -55,7 +63,7 @@ instance Alternative f => Applicative (Parser p f) where
 
   p <*> q = Parser
     { results = results p <*> results q
-    , consume = \t -> consume p t <*> q <|> kill p <*> consume q t
+    , consume = \t -> consume p t <*> q <|> fmaps (results p) (consume q t)
     }
 
 instance Alternative f => Alternative (Parser t f) where
