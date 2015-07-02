@@ -38,3 +38,13 @@ test-suite tests
     test-framework,
     test-framework-hunit,
     HUnit
+
+benchmark micro
+  type: exitcode-stdio-1.0
+  hs-source-dirs: src-bench
+  main-is: micro.hs
+  -- other-modules:
+  build-depends:
+    base,
+    coalgebraic-parsing,
+    criterion
